@@ -1,0 +1,15 @@
+<h1>Your To-Dos</h1>
+<ul>
+  {% for task in tasks %}
+    <li>
+      {{ task.title }} - {% if task.done %} finished {% else %} not finished {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+<a href="{% url 'sso_logout' %}">Logout</a>
+<form method="post" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button type="submit">Logout</button>
+</form>
+
+<a href="{% url 'add_task' %}">Add Task</a>
