@@ -12,16 +12,30 @@ from django.http import HttpResponse
 from django.urls import reverse
 from django.middleware.csrf import get_token
 
+from django.http import HttpResponse
+from django.middleware.csrf import get_token
+
 def home(request):
     if request.user.is_authenticated:
+        backend = request.session.get('_auth_user_backend', '')
+
+        if 'AdfsAuthCodeBackend' in backend:
+            # SSO user
+            logout_button = '<a href="/sso-logout/" class="btn btn-danger">Logout (SSO)</a>'
+        else:
+            # Normal user
+            logout_button = f"""
+                <form action="/accounts/logout/" method="post">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="{get_token(request)}">
+                    <button type="submit" class="btn btn-danger">Logout (Normal)</button>
+                </form>
+            """
+
         return HttpResponse(
             f"""
             Hello {request.user.first_name or request.user.username}, 
             <a href="/tasks/">Go to your tasks</a><br>
-            <form action="/logout/" method="post">
-                <input type="hidden" name="csrfmiddlewaretoken" value="{get_token(request)}">
-                <button type="submit" class="btn btn-danger">Logout</button>
-            </form>
+            {logout_button}
             """
         )
     else:
@@ -35,8 +49,17 @@ def home(request):
 
 @login_required
 def task_list(request):
+    backend_path = request.session.get('_auth_user_backend', None)
+    is_sso = False
+
+    if backend_path and "AdfsAuthCodeBackend" in backend_path:
+        is_sso = True
+
     tasks = Task.objects.filter(user=request.user)
-    return render(request, "todo/task_list.html", {"tasks": tasks})
+    return render(request, "todo/task_list.html", {
+        "tasks": tasks,
+        "is_sso": is_sso,  
+    })
 
 @login_required
 def add_task(request):

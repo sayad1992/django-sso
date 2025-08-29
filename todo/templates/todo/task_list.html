@@ -6,10 +6,18 @@
     </li>
   {% endfor %}
 </ul>
-<a href="{% url 'sso_logout' %}">Logout</a>
-<form method="post" action="{% url 'logout' %}">
-    {% csrf_token %}
-    <button type="submit">Logout</button>
-</form>
+
+{% if is_sso %}
+  
+  <a href="{% url 'sso_logout' %}" class="btn btn-danger">Logout (SSO)</a>
+{% else %}
+ 
+  <form method="post" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Logout (Normal)</button>
+  </form>
+{% endif %}
 
 <a href="{% url 'add_task' %}">Add Task</a>
+
+
