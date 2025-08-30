@@ -15,37 +15,10 @@ from django.middleware.csrf import get_token
 from django.http import HttpResponse
 from django.middleware.csrf import get_token
 
+
 def home(request):
-    if request.user.is_authenticated:
-        backend = request.session.get('_auth_user_backend', '')
-
-        if 'AdfsAuthCodeBackend' in backend:
-            # SSO user
-            logout_button = '<a href="/sso-logout/" class="btn btn-danger">Logout (SSO)</a>'
-        else:
-            # Normal user
-            logout_button = f"""
-                <form action="/accounts/logout/" method="post">
-                    <input type="hidden" name="csrfmiddlewaretoken" value="{get_token(request)}">
-                    <button type="submit" class="btn btn-danger">Logout (Normal)</button>
-                </form>
-            """
-
-        return HttpResponse(
-            f"""
-            Hello {request.user.first_name or request.user.username}, 
-            <a href="/tasks/">Go to your tasks</a><br>
-            {logout_button}
-            """
-        )
-    else:
-        return HttpResponse(
-            """
-            Welcome! <br>
-            <a href="/accounts/login/" class="btn btn-secondary">Login with Username/Password</a><br>
-            <a href="/oauth2/login" class="btn btn-primary">Login with ADFS</a>
-            """
-        )
+    backend = request.session.get('_auth_user_backend', '') if request.user.is_authenticated else ''
+    return render(request, "todo/home.html", {"backend": backend})
 
 @login_required
 def task_list(request):
